@@ -4,10 +4,14 @@ from numpy import vstack,array
 from numpy.random import rand
 from scipy.cluster.vq import kmeans,vq
 import random
-
+import numpy
+import matplotlib
+matplotlib.use('Agg')
+from scipy.cluster.vq import *
+pylab.close()
 field_names = ['Report No.','Report Date','Sent to Manufacturer / Importer / Private Labeler','Publication Date','Category of Submitter','Product Description','Product Category','Product Sub Category','Product Type','Product Code','Manufacturer / Importer / Private Labeler Name','Brand','Model Name or Number','Serial Number','UPC','Date Manufactured','Manufacturer Date Code','Retailer','Retailer State','Purchase Date','Purchase Date Is Estimate','Incident Description','City','State','ZIP','Location','(Primary) Victim Severity','(Primary) Victims Gender','My Relation To The (Primary) Victim','(Primary) Victims Age (years)','Submitter Has Product','Product Was Damaged Before Incident','Damage Description','Damage Repaired','Product Was Modified Before Incident','Have You Contacted The Manufacturer','If Not Do You Plan To','Answer Explanation','Company Comments','Associated Report Numbers']
 print len(field_names)
-csvfile = open("Consumer.csv","r")
+csvfile = open("../Consumer.csv","r")
 reader = csv.DictReader(csvfile, fieldnames=field_names)
 
 
@@ -31,6 +35,8 @@ def get_unique_lists(x_param, y_param):
 # convert vector to decimal points 
 def get_decimal_vector(x_list,y_list,vector):
     d_vector = []
+    x_d = []
+    y_d = []
     for element in vector:
         x_index= x_list.index(element[0])
         #print x_index
@@ -38,10 +44,13 @@ def get_decimal_vector(x_list,y_list,vector):
         #print y_index
         d_vector_ele = []
         jitter = [random.random() for _ in range(0, 1)][0]
+        jitter2 = [random.random() for _ in range(0, 1)][0]
         d_vector_ele.append(x_index+jitter)
+        x_d.append(x_index+jitter)
+        y_d.append(y_index+jitter2)
         d_vector_ele.append(y_index+jitter)
         d_vector.append(d_vector_ele)
-    return d_vector
+    return d_vector,x_d,y_d
 
 def vector_to_image(d_vector):
     #data = array(d_vector)
@@ -54,12 +63,29 @@ def vector_to_image(d_vector):
     #pylab.plot(data[idx==0,0],data[idx==0,1],'ob',
     #     data[idx==1,0],data[idx==1,1],'or')
     pylab.plot(data[idx==0,0],data[idx==0,1],'ob',
-         data[idx==1,0],data[idx==1,1],'or',markersize=2,marker='o')
+         data[idx==1,0],'or',markersize=2,marker='o')
     pylab.plot(centroids[:,0],centroids[:,1],'sg',markersize=12,marker='o')
     #pylab.plot(centroids[:,0],centroids[:,1],centroids[:,2],'sg',markersize=1)
     pylab.savefig("./consumer_cluster.png")
 
+
+def vector_to_image2(d_vector):
+    xy = array(d_vector)
+    res, idx = kmeans2(xy,3)
+    colors = ([([0.4,1,0.4],[1,0.4,0.4],[0.1,0.8,1])[i] for i in idx])
+    pylab.scatter(xy[:,0],xy[:,1], c=colors)
+    pylab.scatter(res[:,0],res[:,1], marker='o', s = 500, linewidths=2, c='none')
+    pylab.scatter(res[:,0],res[:,1], marker='x', s = 500, linewidths=2)
+    pylab.savefig('./kmeans.png')
+
 x_list,y_list,vector = get_unique_lists('Product Type','City')
-d_vector = get_decimal_vector(x_list,y_list,vector)
-vector_to_image(d_vector)
+d_vector,x_d,y_d = get_decimal_vector(x_list,y_list,vector)
+data= numpy.array([[1,1],[2,2],[6,4],[7,5]])
+vector_to_image2(data)
+#print x_d
+#print y_d
+#pylab.plot(x_d, y_d, 'b')
+#pylab.savefig('Fig1.png')
+
+
 

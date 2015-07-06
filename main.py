@@ -49,9 +49,10 @@ def get_decimal_vector(x_list,y_list,vector):
         y_index = y_list.index(element[1])
         #print y_index
         d_vector_ele = []
-        jitter = [random.random() for _ in range(0, 1)][0]
-        d_vector_ele.append(x_index+jitter)
-        d_vector_ele.append(y_index+jitter)
+        jitter1 = [random.random() for _ in range(0, 1)][0]
+        jitter2 = [random.random() for _ in range(0, 1)][0]
+        d_vector_ele.append(x_index+jitter1)
+        d_vector_ele.append(y_index+jitter2)
         d_vector.append(d_vector_ele)
     return d_vector
 
@@ -74,6 +75,17 @@ def vector_to_image(d_vector):
     pylab.savefig("./static/"+filename)
     return filename
 
+def vector_to_image2(d_vector,num_of_clusters):
+    name = str(uuid.uuid4())
+    xy = array(d_vector)
+    res, idx = kmeans2(xy,num_of_clusters)
+    colors = ([([0.4,1,0.4],[1,0.4,0.4],[0.1,0.8,1])[i] for i in idx])
+    pylab.scatter(xy[:,0],xy[:,1], c=colors)
+    pylab.scatter(res[:,0],res[:,1], marker='o', s = 500, linewidths=2, c='none')
+    pylab.scatter(res[:,0],res[:,1], marker='x', s = 500, linewidths=2)
+    filename = name+".png"
+    pylab.savefig("./static/"+filename)
+    return filename
 
 
 
@@ -102,8 +114,9 @@ def clusterimage():
         print x_param
         print y_param
         x_list,y_list,vector = get_unique_lists(x_param,y_param)
-        d_vector = get_decimal_vector(x_list,y_list,vector)
-        name = vector_to_image(d_vector)
+        #d_vector = get_decimal_vector(x_list,y_list,vector)
+        d_vector = array([[1,1],[2,2],[6,5],[7,4]])
+        name = vector_to_image2(d_vector,2)
         #data = json.dumps(posted_dict)
         resp = HTTPResponse(body=name,status=200)
         return resp

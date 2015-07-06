@@ -8,6 +8,8 @@ pdb.set_trace()
 # data generation
 data = vstack((rand(150,2) + array([.5,.5]),rand(150,2)))
 
+data = vstack([[1,1],[2,2],[6,5],[7,4]])
+
 # computing K-Means with K = 2 (2 clusters)
 centroids,_ = kmeans(data,2)
 # assign each sample to a cluster
