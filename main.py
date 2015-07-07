@@ -17,14 +17,15 @@ from scipy.cluster.vq import kmeans,vq
 import json
 
 
-field_names = ['Report No.','Report Date','Sent to Manufacturer / Importer / Private Labeler','Publication Date','Category of Submitter','Product Description','Product Category','Product Sub Category','Product Type','Product Code','Manufacturer / Importer / Private Labeler Name','Brand','Model Name or Number','Serial Number','UPC','Date Manufactured','Manufacturer Date Code','Retailer','Retailer State','Purchase Date','Purchase Date Is Estimate','Incident Description','City','State','ZIP','Location','(Primary) Victim Severity','(Primary) Victims Gender','My Relation To The (Primary) Victim','(Primary) Victims Age (years)','Submitter Has Product','Product Was Damaged Before Incident','Damage Description','Damage Repaired','Product Was Modified Before Incident','Have You Contacted The Manufacturer','If Not Do You Plan To','Answer Explanation','Company Comments','Associated Report Numbers']
+field_names = ["time","latitude","longitude","depth","mag","magType","nst","gap","dmin","rms","net","id","updated","place","type"]
+
 print len(field_names)
 # getting all the unique fields::;
 def get_unique_lists(x_param, y_param):
     x_list = []
     y_list = []
     vector = []
-    csvfile = open("Consumer.csv","r")
+    csvfile = open("all_month.csv","r")
     reader = csv.DictReader(csvfile, fieldnames=field_names)
     for row in reader:
         vector_element = []
@@ -54,6 +55,20 @@ def get_decimal_vector(x_list,y_list,vector):
         d_vector_ele.append(x_index+jitter1)
         d_vector_ele.append(y_index+jitter2)
         d_vector.append(d_vector_ele)
+    return d_vector
+
+def get_decimal_vector2(x_param,y_param):
+    d_vector = []
+    csvfile = open("all_month.csv","r")
+    reader = csv.DictReader(csvfile, fieldnames=field_names)
+    reader.next()
+    for row in reader:
+        vector_element = []
+        x_cor = float(row[x_param]) if row[x_param]!='' else 0
+        y_cor = float(row[y_param]) if row[y_param]!='' else 0
+        vector_element.append(x_cor)
+        vector_element.append(y_cor)
+        d_vector.append(vector_element)
     return d_vector
 
 def vector_to_image(d_vector):
@@ -111,12 +126,14 @@ def clusterimage():
         posted_dict =  request.forms.dict
         x_param = posted_dict["x_param"][0]
         y_param = posted_dict["y_param"][0]
+        nc = int(posted_dict["noofclusters"][0])
         print x_param
         print y_param
-        x_list,y_list,vector = get_unique_lists(x_param,y_param)
+        #x_list,y_list,vector = get_unique_lists(x_param,y_param)
         #d_vector = get_decimal_vector(x_list,y_list,vector)
-        d_vector = array([[1,1],[2,2],[6,5],[7,4]])
-        name = vector_to_image2(d_vector,2)
+        d_vector = get_decimal_vector2(x_param,y_param)
+        d_vector = array(d_vector)
+        name = vector_to_image2(d_vector,nc)
         #data = json.dumps(posted_dict)
         resp = HTTPResponse(body=name,status=200)
         return resp
