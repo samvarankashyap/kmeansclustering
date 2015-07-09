@@ -1,6 +1,5 @@
 from bottle import route, run, template
 from bottle import route, request, response, template, HTTPResponse
-
 import uuid
 import numpy
 import matplotlib
@@ -18,6 +17,9 @@ import json
 
 
 field_names = ["time","latitude","longitude","depth","mag","magType","nst","gap","dmin","rms","net","id","updated","place","type"]
+
+def distance(p0,p1):
+    return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
 
 print len(field_names)
 # getting all the unique fields::;
@@ -92,15 +94,28 @@ def vector_to_image(d_vector):
 
 def vector_to_image2(d_vector,num_of_clusters):
     name = str(uuid.uuid4())
+    xy = []
     xy = array(d_vector)
     res, idx = kmeans2(xy,num_of_clusters)
-    colors = ([([0.4,1,0.4],[1,0.4,0.4],[0.1,0.8,1])[i] for i in idx])
+    colors = ([([0.4,1,0.4],[1,0.4,0.4],[0.1,0.8,1],[1,1,1],[0,0,0],[0.1,0.1,0.1])[i] for i in idx])
+    cluster_dict = {"blue":0,"red":0,"green":0,"white":0,"black":0}
+    for x in colors:
+        if str(x)=="[0.4, 1, 0.4]":
+            cluster_dict["blue"] += 1
+        if str(x)=="[1, 0.4, 0.4]":
+            cluster_dict["red"] += 1
+        if str(x)=="[0.1, 0.8, 1]":
+            cluster_dict["green"] += 1
+        if str(x)=="[1, 1, 1]":
+            cluster_dict["white"] += 1
+        if str(x)=="[0, 0, 0]":
+            cluster_dict["black"] += 1
     pylab.scatter(xy[:,0],xy[:,1], c=colors)
     pylab.scatter(res[:,0],res[:,1], marker='o', s = 500, linewidths=2, c='none')
     pylab.scatter(res[:,0],res[:,1], marker='x', s = 500, linewidths=2)
     filename = name+".png"
     pylab.savefig("./static/"+filename)
-    return filename
+    return filename,cluster_dict
 
 
 
@@ -110,8 +125,7 @@ def server_static(filename):
     return static_file(filename, root="static")
 
 @route('/')
-def index():
-    # Report No.,Report Date,Sent to Manufacturer / Importer / Private Labeler,Publication Date,Category of Submitter,Product Description,Product Category,Product Sub Category,Product Type,Product Code,Manufacturer / Importer / Private Labeler Name,Brand,Model Name or Number,Serial Number,UPC,Date Manufactured,Manufacturer Date Code,Retailer,Retailer State,Purchase Date,Purchase Date Is Estimate,Incident Description,City,State,ZIP,Location,(Primary) Victim Severity,(Primary) Victim's Gender,My Relation To The (Primary) Victim,(Primary) Victim's Age (years),Submitter Has Product,Product Was Damaged Before Incident,Damage Description,Damage Repaired,Product Was Modified Before Incident,Have You Contacted The Manufacturer,If Not Do You Plan To,Answer Explanation,Company Comments,Associated Report Numbers
+def main():
     #x_list,y_list,vector = get_unique_lists('Product Type','City')
     #d_vector = get_decimal_vector(x_list,y_list,vector)
     #name = vector_to_image(d_vector)
@@ -120,7 +134,6 @@ def index():
 
 @route('/clusterimage',  method='POST')
 def clusterimage():
-    #pdb.set_trace()
     # function creates output of the queries based on the posted parameters
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         posted_dict =  request.forms.dict
@@ -133,13 +146,13 @@ def clusterimage():
         #d_vector = get_decimal_vector(x_list,y_list,vector)
         d_vector = get_decimal_vector2(x_param,y_param)
         d_vector = array(d_vector)
-        name = vector_to_image2(d_vector,nc)
+        name,cluster_dict = vector_to_image2(d_vector,nc)
         #data = json.dumps(posted_dict)
-        resp = HTTPResponse(body=name,status=200)
+        counters = json.dumps(cluster_dict) 
+        resp = HTTPResponse(body=name+"#"+counters,status=200)
         return resp
     else:
         return 'This is a normal request'
 
-
-
-run(host='0.0.0.0', port=8000)
+if __name__ == '__main__':
+    run(host='0.0.0.0', port=8080, debug=True)

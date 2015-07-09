@@ -19,10 +19,12 @@ $( document ).ready(function() {
                			$.post("/clusterimage",postObj,
     				function(data, status){
                                 	//$("#content").text(data);
-                                        console.log(data)
-                                        $("#cluster_image").attr("src", "/static/"+data)
+                                        console.log(data);
+                                        var res = data.split("#");
+                                        $("#cluster_image").attr("src", "/static/"+res[0])
                                         $("#cluster_image").show()
                                         $("#caption").show()
+                                        $("#error").html(res[1]);
                			});
                         }
                         else{
