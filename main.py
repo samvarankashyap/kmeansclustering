@@ -14,14 +14,14 @@ from numpy import vstack,array
 from numpy.random import rand
 from scipy.cluster.vq import kmeans,vq
 import json
-
+import math
 
 field_names = ["time","latitude","longitude","depth","mag","magType","nst","gap","dmin","rms","net","id","updated","place","type"]
 
 def distance(p0,p1):
     return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
 
-print len(field_names)
+#print len(field_names)
 # getting all the unique fields::;
 def get_unique_lists(x_param, y_param):
     x_list = []
@@ -110,14 +110,24 @@ def vector_to_image2(d_vector,num_of_clusters):
             cluster_dict["white"] += 1
         if str(x)=="[0, 0, 0]":
             cluster_dict["black"] += 1
+    distances = get_distances(res)
     pylab.scatter(xy[:,0],xy[:,1], c=colors)
     pylab.scatter(res[:,0],res[:,1], marker='o', s = 500, linewidths=2, c='none')
     pylab.scatter(res[:,0],res[:,1], marker='x', s = 500, linewidths=2)
     filename = name+".png"
     pylab.savefig("./static/"+filename)
-    return filename,cluster_dict
+    return filename,cluster_dict,distances
 
-
+def get_distances(cor):
+    #print cor
+    #print cor[0][0]
+    distances = {}
+    for i in range(0,len(cor)):
+        for j in range(0, i):
+            key="cluster"+str(i)+":cluster"+str(j)
+            distances[key]= distance(cor[i],cor[j])
+    #print distances
+    return distances
 
 
 @route('/static/<filename>')
@@ -140,16 +150,17 @@ def clusterimage():
         x_param = posted_dict["x_param"][0]
         y_param = posted_dict["y_param"][0]
         nc = int(posted_dict["noofclusters"][0])
-        print x_param
-        print y_param
+        #print x_param
+        #print y_param
         #x_list,y_list,vector = get_unique_lists(x_param,y_param)
         #d_vector = get_decimal_vector(x_list,y_list,vector)
         d_vector = get_decimal_vector2(x_param,y_param)
         d_vector = array(d_vector)
-        name,cluster_dict = vector_to_image2(d_vector,nc)
+        name,cluster_dict,distances = vector_to_image2(d_vector,nc)
         #data = json.dumps(posted_dict)
-        counters = json.dumps(cluster_dict) 
-        resp = HTTPResponse(body=name+"#"+counters,status=200)
+        distances = json.dumps(distances)
+        counters = json.dumps(cluster_dict)
+        resp = HTTPResponse(body=name+"#"+counters+"#"+distances,status=200)
         return resp
     else:
         return 'This is a normal request'

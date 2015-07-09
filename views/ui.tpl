@@ -24,7 +24,17 @@ $( document ).ready(function() {
                                         $("#cluster_image").attr("src", "/static/"+res[0])
                                         $("#cluster_image").show()
                                         $("#caption").show()
-                                        $("#error").html(res[1]);
+                                        var instances = JSON.parse(res[1]);
+                                        var distances = JSON.parse(res[2]);
+                                        for(x in instances){
+                                            if(instances[x]>0){
+                                            $("#error").append(x+":"+instances[x]+"<br>");
+                                              }
+                                        }
+                                        for(y in distances){
+                                             $("#error").append(y+":"+distances[y]+"<br>");
+                                        }
+                                        
                			});
                         }
                         else{
