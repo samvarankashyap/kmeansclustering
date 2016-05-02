@@ -1,4 +1,4 @@
-udo apt-get install python-pip
+sudo apt-get install python-pip
 sudo pip install numpy
 sudo pip install python-dev python-devel
 sudo pip install  pypy-dev
